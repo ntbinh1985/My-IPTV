@@ -83,7 +83,7 @@ def main():
 
     # Xuất file kèm EPG
     output_filename = "daily_playlist.m3u"
-    epg_url = "https://iptv-org.github.io/epg/guides/vn/vie.epg.xml"
+    epg_url = "https://iptv-org.github.io/epg/guides/vn/vie.epg.xml,https://iptv-org.github.io/epg/guides/uk/en.epg.xml,https://iptv-org.github.io/epg/guides/us/en.epg.xml,https://iptv-org.github.io/epg/guides/my/en.epg.xml"
     
     with open(output_filename, 'w', encoding='utf-8') as f:
         f.write(f'#EXTM3U x-tvg-url="{epg_url}"\n')
