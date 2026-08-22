@@ -50,12 +50,34 @@ def parse_m3u(url):
 
 def check_channel(channel):
     try:
-        headers = {'User-Agent': 'Mozilla/5.0'}
+        # Giả lập phần mềm VLC để server không chặn bot
+        headers = {'User-Agent': 'VLC/3.0.16 LibVLC/3.0.16'}
         response = requests.get(channel["url"], headers=headers, timeout=10, stream=True)
+        
         if response.status_code == 200:
-            content = next(response.iter_content(chunk_size=512)).decode('utf-8', errors='ignore')
-            if "#EXTM3U" in content or "#EXTINF" in content or "http" in content or "TS" in content:
+            # 1. Lấy thông tin định dạng file từ server
+            content_type = response.headers.get('Content-Type', '').lower()
+            
+            # 2. GIẾT ZOMBIE: Nếu server trả về trang web HTML (thường là trang báo lỗi fake) -> Loại ngay
+            if 'text/html' in content_type:
+                return None
+                
+            # 3. Nếu server báo đây chuẩn là luồng IPTV (m3u8)
+            if 'mpegurl' in content_type or 'application/x-mpegurl' in content_type:
+                # Đọc thử 1 đoạn nhỏ xem có đúng cấu trúc file stream không
+                content = next(response.iter_content(chunk_size=512)).decode('utf-8', errors='ignore')
+                if "#EXTM3U" in content:
+                    return channel
+                    
+            # 4. Nếu server báo đây là file video trực tiếp (TS, MP4)
+            elif 'video' in content_type or 'octet-stream' in content_type:
                 return channel
+                
+            # 5. Trường hợp server ẩn Content-Type, bốc đại 512 bytes đầu tiên để soi cấu trúc
+            else:
+                content = next(response.iter_content(chunk_size=512)).decode('utf-8', errors='ignore')
+                if "#EXTM3U" in content:
+                    return channel
     except:
         pass
     return None
